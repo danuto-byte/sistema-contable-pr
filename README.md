@@ -1,59 +1,81 @@
-# Sistema Contable — Frontend (Vue 3)
+# Sistema Contable
 
-Aplicación de una sola página: catálogo de cuentas, libro diario con validación de partida doble,
-mayorización automática, balance general y estado de resultados.
+Aplicación web para organizar y consultar la actividad contable de un negocio. Reúne en un mismo lugar el catálogo de cuentas, el registro de operaciones y los reportes que ayudan a entender cómo evoluciona la situación financiera.
 
-## Cómo ejecutarlo
+La interfaz está en español y busca que las tareas habituales —como revisar movimientos, registrar un asiento o consultar un balance— sean claras sin requerir conocimientos técnicos del sistema.
 
-Abre `sistema-contable.html` en el navegador. No necesita instalación: Vue 3 se carga por CDN.
-Los datos se guardan en el navegador y el archivo ya incluye un catálogo y siete asientos de ejemplo
-para que los reportes se vean con contenido desde el primer momento.
+> **Importante:** esta copia incluye datos y usuarios de demostración. Está preparada para revisión y desarrollo; no debe considerarse por sí sola un servicio de producción ni utilizarse para guardar información financiera real.
 
-Usuarios de prueba:
+## Qué permite hacer
 
-| Usuario    | Contraseña | Rol           |
-|------------|------------|---------------|
-| `admin`    | `admin123` | Administrador |
-| `contador` | `user123`  | Consulta      |
+- **Consultar el panel contable** y revisar cifras resumidas del período.
+- **Organizar cuentas** por código, nombre y estado.
+- **Registrar asientos** con varias líneas y validar que el debe y el haber coincidan antes de guardarlos.
+- **Buscar movimientos** en el libro diario por fecha, concepto, cuenta o número.
+- **Consultar el libro mayor**, con saldos calculados a partir de los movimientos.
+- **Revisar el balance general y el estado de resultados** para el período elegido.
+- **Imprimir reportes o descargarlos como CSV**, compatible con hojas de cálculo.
+- **Administrar usuarios de demostración**, roles e historial de acciones.
 
-## Cómo se cumple cada requisito
+La clasificación contable se obtiene del primer dígito del código: 1 para activos, 2 para pasivos, 3 para capital, 4 para costos y gastos, y 5 para ingresos.
 
-| Requisito | Dónde está |
+## Probar la aplicación
+
+### Abrir la interfaz
+
+Abre `index.html` en un navegador con conexión a Internet. Vue se carga desde un CDN.
+
+Usuarios de demostración:
+
+| Usuario | Contraseña | Acceso |
+|---|---|---|
+| `admin` | `admin123` | Administración y registro |
+| `contador` | `user123` | Consulta |
+
+Al iniciar sin datos guardados, se muestran un catálogo y asientos de ejemplo para que los reportes tengan contenido. El almacenamiento de la interfaz depende de la disponibilidad de `window.storage` en el entorno donde se abre; si no está disponible, los cambios pueden mantenerse solo durante la sesión del navegador.
+
+### Iniciar el servidor
+
+El proyecto también incluye un servidor Node.js con Express y rutas de API. Para ejecutarlo localmente:
+
+```bash
+npm install
+npm start
+```
+
+Por defecto, el servidor utiliza el puerto `3000`. Se puede comprobar que responde en `http://localhost:3000/api/health`.
+
+La conexión a MongoDB es opcional y se configura mediante la variable `MONGODB_URI` (ver `.env.example`). En el estado actual, las rutas del servidor trabajan con datos de ejemplo en memoria: conectarse a MongoDB no significa que los registros de esta aplicación se estén guardando allí. Al reiniciar el proceso, los cambios en memoria se pierden.
+
+## Estructura del proyecto
+
+| Ruta | Contenido |
 |---|---|
-| RF01 / RF02 Usuarios y roles | Pantalla de acceso, módulo Usuarios, método `puede()` |
-| RF03 Catálogo de cuentas | Vista Catálogo, alta/edición con validación de código |
-| RF04 Libro diario | Vista Nuevo asiento, líneas dinámicas de debe y haber |
-| RF05 Partida doble | `borradorCuadra` y `guardarAsiento()`: no guarda si hay diferencia |
-| RF06 Consulta del diario | Filtros por concepto, cuenta, número y rango de fechas |
-| RF07 Mayorización automática | Computada `mayor`, agrupa por cuenta y acumula saldo |
-| RF08 Balance general | Computada `bal`, grupos 1, 2 y 3 más el resultado del período |
-| RF09 Estado de resultados | Computada `res`, grupo 5 menos grupo 4 |
-| RF10 Clasificación automática | Constante `TIPOS` y función `tipoDe()` según el primer dígito |
-| RF11 Consulta de estados | Vistas Balance general, Estado de resultados, Diario y Mayor |
-| RF12 Reportes | Botones de impresión con hoja de estilo `@media print` y descarga en CSV para Excel |
-| RNF02 Validaciones | Campos obligatorios, código de 3 a 6 dígitos, importes no negativos, un solo lado por línea |
-| RNF03 Seguridad | Contraseñas con SHA-256 y sal por usuario (`hashear()`) |
-| RNF04 Integridad | Ningún asiento descuadrado entra al arreglo `asientos` |
-| RNF07 Mantenibilidad | Script dividido en cinco bloques: clasificación, utilidades, respaldo, datos, aplicación |
+| `index.html` | Página principal de la aplicación |
+| `src/app.js` | Interfaz, validaciones, cálculos y reportes |
+| `src/estilos.css` | Presentación visual y estilos de impresión |
+| `server/index.js` | Servidor Express y rutas de la API |
+| `server/config/` | Configuración de la conexión opcional a MongoDB |
+| `server/data/` | Datos de ejemplo utilizados por el servidor |
+| `tests/` | Pruebas automatizadas de la API |
+| `package.json` | Dependencias y comandos del proyecto |
 
-Extras incluidos: panel con la ecuación contable viva, gráficas de ingresos y gastos por mes,
-filtros por período contable e historial de movimientos por usuario.
+## Código fuente y distribución
 
-## Siguiente fase: backend
+Esta carpeta contiene archivos editables de desarrollo —HTML, JavaScript y CSS— junto con el servidor, las pruebas y la configuración de dependencias. En esta copia no aparecen instaladores de Electron ni un archivo `app.asar`; por tanto, su contenido corresponde al código de la aplicación disponible aquí, no a una distribución empaquetada.
 
-El frontend está listo para cambiar el respaldo local por llamadas HTTP. Los puntos de conexión
-esperados son:
+Para fines de mantenimiento, el punto de entrada de la interfaz es `index.html`; la lógica principal está en `src/app.js`. El servidor se inicia desde `server/index.js`.
 
-```
-POST /api/auth/login          -> { token, usuario }
-GET|POST|PUT|DELETE /api/usuarios
-GET|POST|PUT|DELETE /api/cuentas
-GET|POST|DELETE     /api/asientos        (el servidor revalida la partida doble)
-GET /api/reportes/mayor?desde&hasta
-GET /api/reportes/balance?hasta
-GET /api/reportes/resultados?desde&hasta
+La carpeta local no incluye historial de Git ni una referencia al repositorio remoto o al commit del que proviene. Por ello, aunque aquí se puede revisar y modificar código fuente, esta copia por sí sola no permite confirmar si es exactamente el repositorio usado para construir una distribución ni reconstruir su cadena de cambios. Para verificar esa relación, se requiere contrastarla con el repositorio de origen y su historial de versiones.
+
+## Pruebas
+
+Ejecuta las pruebas automatizadas con:
+
+```bash
+npm test
 ```
 
-En el servidor conviene repetir dos reglas que aquí ya están implementadas: rechazar el asiento cuando
-la suma del debe no iguala a la del haber, y derivar la clasificación del primer dígito del código en
-lugar de guardarla como campo editable. Las contraseñas deben pasar a bcrypt.
+## Alcance actual
+
+La interfaz mantiene su propia lógica y datos de demostración en el navegador. El servidor ofrece endpoints para autenticación, cuentas, asientos y reportes, pero la interfaz no está conectada a ellos de forma integral. Antes de utilizar el sistema con datos reales, se necesita completar esa integración y definir persistencia, controles de acceso, gestión segura de contraseñas, copias de respaldo y despliegue.
